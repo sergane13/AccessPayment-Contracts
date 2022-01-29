@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
+// solhint-disable-next-line
 pragma solidity 0.8.11;
 
 import "./Access.sol";
@@ -14,9 +15,9 @@ import "./Access.sol";
 */
 contract Payment
 {   
-    event ServiceCreated(uint256 id, uint248 price);
-    event ServiceStarted(uint256 id);
-    event ServiceStoped(uint256 id);
+    event ServiceCreated(uint256 indexed id, uint248 price);
+    event ServiceStarted(uint256 indexed id);
+    event ServiceStoped(uint256 indexed id);
 
     uint256 private _servicesIndex;
 
@@ -28,13 +29,13 @@ contract Payment
         PaymentFreq freq;
     }
 
-    mapping(uint256 => Service) _services;
+    mapping(uint256 => Service) private _services;
 
     address private _owner;
     Access private _accessContract;
 
     /**
-     *
+     * @dev Throw if not owner
     */
     modifier onlyOwner()
     {
@@ -43,7 +44,7 @@ contract Payment
     }
 
     /**
-     *
+     * @dev Throw if address is 0 address
     */
     modifier nonZeroAddress(address _sender)
     {
@@ -52,7 +53,7 @@ contract Payment
     }
 
     /**
-     *
+     * @dev Throw if service does not exist yet
     */
     modifier serviceExists(uint256 _id)
     {
@@ -61,7 +62,7 @@ contract Payment
     }
 
     /**
-     *
+     * @dev Throw if service is stopped
     */
     modifier serviceRunning(uint256 _id)
     {
@@ -70,7 +71,7 @@ contract Payment
     }
 
     /**
-     *
+     * @dev Throw if service is started
     */
     modifier serviceStopped(uint256 _id)
     {
@@ -79,27 +80,32 @@ contract Payment
     }
 
     /**
-     *
+     * @dev Throw if contract has no funds
     */
-    modifier correctPrice(uint256 _id)
+    modifier contractBalance()
     {
-         require(_services[_id].price == msg.value, "Invalid Payment");
-         _;
+        require(address(this).balance > 0, "No funds");
+        _;
     }
 
-    // CONTRACT ACCESS MUST HAVE CODE
+    /**
+     * @dev init the owner, service index and the access contract that will 
+     * comunicate with this one
+    */
     constructor(address accessContract_) 
         nonZeroAddress(accessContract_)
     {
         _servicesIndex = 0;
         _owner = msg.sender;
         _accessContract = Access(accessContract_);
+
+        // CONTRACT ACCESS MUST HAVE CODE
     }
 
     /**
      * @dev Create service for business.
     */
-    function CreateService(
+    function createService(
         uint248 _price, 
         PaymentFreq _freq
     )   external 
@@ -115,7 +121,7 @@ contract Payment
     /**
      * @dev Start an inactive service.
     */
-    function StartService(
+    function startService(
         uint256 _id
     ) 
         external 
@@ -124,28 +130,14 @@ contract Payment
         serviceStopped(_id)
     {
         _services[_id].isActive = true;
-    }
-
-    /**
-     * @dev Stop an active service.
-    */
-    function StopService(
-        uint256 _id
-    ) 
-        external
-        onlyOwner 
-        serviceExists(_id)
-        serviceRunning(_id)
-    {
-        _services[_id].isActive = false;
-    }
+    }  
 
     /**
      * @dev Change price of a service no matter 
      * service status [active, stopped].
      * Modifications will rull up after users access expires.
     */
-    function ChangeServicePrice(
+    function changeServicePrice(
         uint256 _id, 
         uint248 _price
     ) 
@@ -160,7 +152,7 @@ contract Payment
      * @dev Change payment frequency for service.
      * Modifications will rull up after users access expires.
     */
-    function ChangeServiceFreq(
+    function changeServiceFreq(
         uint256 _id, 
         PaymentFreq _freq
     ) 
@@ -173,57 +165,154 @@ contract Payment
 
 
     /**
-     *
+     * @dev Client init a tx and pays for the service
     */
-    function PayService(
+    function payService(
         uint256 _id
     ) 
         external payable 
         serviceExists(_id)
         serviceRunning(_id)
-        correctPrice(_id)
     {
-    
-       
-    
+       _payService(_id, msg.sender);
     }
 
     /**
-     *
+     * @dev Someone pays a service for a friend
     */
-    function PayServiceFrom() external payable {}
+    function payServiceFrom(
+        uint256 _id, 
+        address _client
+    ) 
+        external payable 
+        serviceExists(_id)
+        nonZeroAddress(_client)
+        serviceRunning(_id)
+    {
+        _payService(_id, _client);
+    }
     
     /**
-     *
+     * @dev Modify the access contract that stores permissions
     */
-    function ChangeAccessContract() external {}
-
-    /**
-     *
-    */
-    function WithdrawFunds() external {}
-
-    /**
-     *
-    */
-    function _payService(uint256 _id, address _client) internal {
-        Service memory _service = _services[_id];
-        _accessContract.GiveAccess(_id, _client, _expirationTime(_service.freq));
+    function changeAccessContract(
+        address _newAccessContract
+    ) 
+        external
+        onlyOwner
+        nonZeroAddress(_newAccessContract)
+    {
+        _accessContract = Access(_newAccessContract);
     }
 
     /**
-     *
+     * @dev Owner can withdraw funds stored in the contract.
+     * The caller of the contract must be the owner who is an EOA;
     */
-    function _expirationTime(PaymentFreq _freq) internal view returns(uint248){
+    function withdrawFunds() 
+        external 
+        onlyOwner
+        contractBalance
+    {
+        (bool sent, ) = _owner.call{value: address(this).balance}("");
+        require(sent, "Failed to send Money");
+    }
 
-        uint248 _now = uint248(block.timestamp);
+    /**
+     * @dev Get total number of services active and non active
+    */
+    function getNumberOfServices() 
+        external view 
+        returns(uint256)
+    {
+        return _servicesIndex;
+    }
+
+    /**
+     * @dev Get details about a certain service
+    */
+    function getService(
+        uint256 _id
+    ) 
+        external view 
+        returns(
+            bool, 
+            uint248, 
+            PaymentFreq
+        )
+    {
+        return (
+            _services[_id].isActive, 
+            _services[_id].price, 
+            _services[_id].freq
+        );
+    }
+
+    /**
+     * @dev Return the address of the owner
+    */
+    function getOwner() 
+        external view 
+        returns(address)
+    {
+        return _owner;
+    }
+
+    /**
+     * @dev Return address of access contract
+    */
+    function getAccessContract() 
+        external view 
+        returns(address)
+    {
+        return address(_accessContract);
+    }
+
+    /**
+     * @dev Pay service 
+    */
+    function _payService(
+        uint256 _id, 
+        address _client
+    ) 
+        internal 
+    {
+        Service memory _service = _services[_id];    
+
+        require(_accessContract.getAccess(_id, _client) == false, "Access already given");
+        require(_service.price == msg.value, "Invalid Payment");
+        
+        _accessContract.giveAccess(_id, _client, _expirationTime(_service.freq));
+    }
+
+    /**
+     * @dev Get the expiration time for selected payment freq
+    */
+    function _expirationTime(
+        PaymentFreq _freq
+    ) 
+        internal view 
+        returns(uint248 _expTime)
+    {
+        uint248 _now = _getCurrentTime();
 
         if(_freq == PaymentFreq.ONETIME){
-            return _now + 36500 days;
+            _expTime = _now + 36500 days;
         }else if(_freq == PaymentFreq.MONTHLY){
-            return _now + 30 days;
+            _expTime = _now + 30 days;
         }else if(_freq == PaymentFreq.YEARLY){
-            return _now + 365 days;
+            _expTime = _now + 365 days;
         }   
+    }
+
+    /**
+     * @dev Return current time for verifications.
+     * Due to higher timeframe used in this contract,
+     * block.timestamp is a good approach to verify variables.
+     * Timestamp manipulation is not significant for our usecase.
+    */
+    function _getCurrentTime() internal view returns(uint248)
+    {
+        return uint248(block.timestamp);
     }
 }
