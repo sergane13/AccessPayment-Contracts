@@ -213,7 +213,8 @@ contract Payment
         external 
         onlyOwner
         contractBalance
-    {
+    {   
+        // replace here with send cause owner is EOA ??
         (bool sent, ) = _owner.call{value: address(this).balance}("");
         require(sent, "Failed to send Money");
     }

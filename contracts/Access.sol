@@ -136,8 +136,8 @@ contract Access
     ) 
         external 
         onlyManagers 
-        nonZeroAddress(msg.sender)
-    {
+        nonZeroAddress(_newPaymentContract)
+    {   
         _paymentContract = _newPaymentContract;
     }
 
