@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
+// solhint-disable-next-line
 pragma solidity 0.8.11;
 
 /**
@@ -10,8 +11,8 @@ pragma solidity 0.8.11;
 */
 contract Access
 {   
-    event AccessGiven(uint256 service, address client, uint256 expirationDate);
-    event AccessRetrieved(uint256 service, address client);
+    event AccessGiven(uint256 service, address indexed client, uint256 expirationDate);
+    event AccessRetrieved(uint256 service, address indexed client);
 
     address private _paymentContract;
     address private _owner;
@@ -65,7 +66,7 @@ contract Access
     */
     modifier expirationDate(uint256 _date)
     {
-        require(_date > block.timestamp, "Old expiration date");
+        require(_date > _getCurrentTime(), "Old expiration date");
         _;
     }
 
@@ -79,7 +80,7 @@ contract Access
     /**
      * @dev Offer access to client for the specified service.
     */
-    function GiveAccess(
+    function giveAccess(
         uint256 _service, 
         address _client, 
         uint248 _expirationDate
@@ -93,11 +94,10 @@ contract Access
         _giveAccess(_service, _client, _expirationDate);
     } 
 
-
     /**
      * @dev Retrieve access of the client for the specified service.
     */
-    function RetrieveAccess(
+    function retrieveAccess(
         uint256 _service, 
         address _client) 
         external 
@@ -108,11 +108,10 @@ contract Access
         _retrieveAccess(_service, _client);
     } 
 
-
     /**
      * @dev Verify access of the client and retrieve it if expiration date has passed.
     */
-    function VerifyAccess(
+    function verifyAccess(
         uint256 _service, 
         address _client
     ) 
@@ -123,17 +122,16 @@ contract Access
     {  
         AccessDetails memory tempAccess = _accessManagement[_service][_client];
 
-        if(tempAccess.expirationTime > block.timestamp)
+        if(tempAccess.expirationTime > _getCurrentTime())
         {
             _retrieveAccess(_service, _client);
         }
     } 
     
-
     /**
      * @dev Set a payment contract that will comunicate with this one.
     */
-    function SetPaymentContract(
+    function setPaymentContract(
         address _newPaymentContract
     ) 
         external 
@@ -143,11 +141,10 @@ contract Access
         _paymentContract = _newPaymentContract;
     }
 
-
     /**
      * @dev Return client access for a service.
     */
-    function GetAccess(
+    function getAccess(
         uint256 _service, 
         address _client
     ) 
@@ -157,11 +154,10 @@ contract Access
         return _accessManagement[_service][_client].hasAccess;
     } 
 
-
     /**
      * @dev Return expiration date of a client for a service.
     */
-    function GetExpirationDate(
+    function getExpirationDate(
         uint256 _service, 
         address _client
     )
@@ -171,22 +167,20 @@ contract Access
         return _accessManagement[_service][_client].expirationTime;
     } 
 
-
     /**
      * @dev Return owner of the contract.
     */
-    function GetOwner()
+    function getOwner()
         external view
         returns(address)
     {
         return _owner;
     }
 
-
     /**
      * @dev Return payment contract connected to this contract.
     */
-    function GetPaymentContract()
+    function getPaymentContract()
         external view
         returns(address)
     {
@@ -224,5 +218,16 @@ contract Access
         _accessManagement[_service][_client].expirationTime = 0;
 
         emit AccessRetrieved(_service, _client);
+    }
+
+    /**
+     * @dev Return current time for verifications.
+     * Due to higher timeframe used in this contract,
+     * block.timestamp is a good approach to verify variables.
+     * Timestamp manipulation is not significant for our usecase.
+    */
+    function _getCurrentTime() internal view returns(uint256)
+    {
+        return block.timestamp;
     }
 }
