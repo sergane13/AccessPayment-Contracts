@@ -25,7 +25,7 @@ contract Payment
 
     struct Service{
         bool isActive;
-        uint248 price;
+        uint232 price;
         PaymentFreq freq;
     }
 
@@ -106,7 +106,7 @@ contract Payment
      * @dev Create service for business.
     */
     function createService(
-        uint248 _price, 
+        uint232 _price, 
         PaymentFreq _freq
     )   external 
         onlyOwner 
@@ -139,7 +139,7 @@ contract Payment
     */
     function changeServicePrice(
         uint256 _id, 
-        uint248 _price
+        uint232 _price
     ) 
         external 
         onlyOwner 
