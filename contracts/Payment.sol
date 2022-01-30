@@ -130,6 +130,24 @@ contract Payment
         serviceStopped(_id)
     {
         _services[_id].isActive = true;
+
+        emit ServiceStarted(_id);
+    }  
+
+    /**
+     * @dev Stop an active service.
+    */
+    function stopService(
+        uint256 _id
+    ) 
+        external 
+        onlyOwner
+        serviceExists(_id)
+        serviceRunning(_id)
+    {
+        _services[_id].isActive = false;
+
+        emit ServiceStoped(_id);
     }  
 
     /**
