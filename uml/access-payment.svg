@@ -81,10 +81,10 @@
 <text text-anchor="start" x="350.6098" y="-498.5" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;createService(_price: uint232, _freq: PaymentFreq)</text>
 <text text-anchor="start" x="350.6098" y="-481.7" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;startService(_id: uint256)</text>
 <text text-anchor="start" x="350.6098" y="-464.9" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;stopService(_id: uint256)</text>
-<text text-anchor="start" x="350.6098" y="-448.1" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;changeServicePrice(_id: uint256, _price: uint232)</text>
-<text text-anchor="start" x="350.6098" y="-431.3" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;changeServiceFreq(_id: uint256, _freq: PaymentFreq)</text>
-<text text-anchor="start" x="350.6098" y="-414.5" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;changeAccessContract(_newAccessContract: address)</text>
-<text text-anchor="start" x="350.6098" y="-397.7" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;withdrawFunds()</text>
+<text text-anchor="start" x="350.6098" y="-448.1" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;withdrawFunds()</text>
+<text text-anchor="start" x="350.6098" y="-431.3" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;setServicePrice(_id: uint256, _price: uint232)</text>
+<text text-anchor="start" x="350.6098" y="-414.5" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;setServiceFreq(_id: uint256, _freq: PaymentFreq)</text>
+<text text-anchor="start" x="350.6098" y="-397.7" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;setAccessContract(_newAccessContract: address)</text>
 <text text-anchor="start" x="350.6098" y="-380.9" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;getNumberOfServices(): uint256</text>
 <text text-anchor="start" x="350.6098" y="-364.1" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;getService(_id: uint256): (bool, uint248, PaymentFreq)</text>
 <text text-anchor="start" x="350.6098" y="-347.3" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;getOwner(): address</text>

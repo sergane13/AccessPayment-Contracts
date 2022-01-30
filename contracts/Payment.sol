@@ -4,6 +4,10 @@
 pragma solidity 0.8.11;
 
 import "./Access.sol";
+/// use openzeppelin contract 
+/// - Ownable
+/// - PullPayment
+/// - ? Reentracy Guard
 
 /**
  * @title Contract that process payments from users
@@ -151,38 +155,6 @@ contract Payment
     }  
 
     /**
-     * @dev Change price of a service no matter 
-     * service status [active, stopped].
-     * Modifications will rull up after users access expires.
-    */
-    function changeServicePrice(
-        uint256 _id, 
-        uint232 _price
-    ) 
-        external 
-        onlyOwner 
-        serviceExists(_id)
-    {
-        _services[_id].price = _price;
-    }
-
-    /**
-     * @dev Change payment frequency for service.
-     * Modifications will rull up after users access expires.
-    */
-    function changeServiceFreq(
-        uint256 _id, 
-        PaymentFreq _freq
-    ) 
-        external
-        onlyOwner
-        serviceExists(_id) 
-    {
-        _services[_id].freq = _freq;
-    }
-
-
-    /**
      * @dev Client init a tx and pays for the service
     */
     function payService(
@@ -211,19 +183,6 @@ contract Payment
     }
     
     /**
-     * @dev Modify the access contract that stores permissions
-    */
-    function changeAccessContract(
-        address _newAccessContract
-    ) 
-        external
-        onlyOwner
-        nonZeroAddress(_newAccessContract)
-    {
-        _accessContract = Access(_newAccessContract);
-    }
-
-    /**
      * @dev Owner can withdraw funds stored in the contract.
      * The caller of the contract must be the owner who is an EOA;
     */
@@ -232,9 +191,53 @@ contract Payment
         onlyOwner
         contractBalance
     {   
-        // replace here with send cause owner is EOA ??
+        // !! replace here with send cause consumes 2300 gas and protect agains reeintrancy
         (bool sent, ) = _owner.call{value: address(this).balance}("");
         require(sent, "Failed to send Money");
+    }
+
+    /**
+     * @dev Change price of a service no matter 
+     * service status [active, stopped].
+     * Modifications will rull up after users access expires.
+    */
+    function setServicePrice(
+        uint256 _id, 
+        uint232 _price
+    ) 
+        external 
+        onlyOwner 
+        serviceExists(_id)
+    {
+        _services[_id].price = _price;
+    }
+
+    /**
+     * @dev Change payment frequency for service.
+     * Modifications will rull up after users access expires.
+    */
+    function setServiceFreq(
+        uint256 _id, 
+        PaymentFreq _freq
+    ) 
+        external
+        onlyOwner
+        serviceExists(_id) 
+    {
+        _services[_id].freq = _freq;
+    }
+
+    /**
+     * @dev Modify the access contract that stores permissions
+    */
+    function setAccessContract(
+        address _newAccessContract
+    ) 
+        external
+        onlyOwner
+        nonZeroAddress(_newAccessContract)
+    {
+        _accessContract = Access(_newAccessContract);
     }
 
     /**
